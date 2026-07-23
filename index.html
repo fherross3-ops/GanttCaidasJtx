@@ -557,76 +557,192 @@ function renderizarDashboard(fecha) {
 // RENDERIZADO GANTT
 // ============================================================
 function renderizarGantt(loomHistory, fechaReferencia) {
-    const grid = document.getElementById('ganttGrid'); const container = document.getElementById('ganttContainer');
+    const grid = document.getElementById('ganttGrid');
+    const container = document.getElementById('ganttContainer');
     grid.innerHTML = '';
     const lineaHoyAnterior = container.querySelector('.linea-hoy-container');
     if (lineaHoyAnterior) lineaHoyAnterior.remove();
     if (fechasDisponibles.length === 0) return;
-    const chartStartDate = parseFecha(fechasDisponibles[0]); const chartTotalDays = 20; const hoy = parseFecha(fechaReferencia);
-    const header = document.createElement('div'); header.className = 'gantt-header';
-    const empty = document.createElement('div'); header.appendChild(empty);
-    const headerTrack = document.createElement('div'); headerTrack.className = 'gantt-track-header';
-    for (let i = 0; i <= chartTotalDays; i+=5) {
-        const f = addDias(chartStartDate, i); const x = (i / chartTotalDays) * 100;
-        const linea = document.createElement('div'); linea.className = 'linea-marca'; linea.style.left = `${x}%`; headerTrack.appendChild(linea);
-        const marca = document.createElement('div'); marca.className = 'fecha-marca'; if (diffDias(f, hoy) === 0) marca.classList.add('hoy'); marca.style.left = `${x}%`; marca.textContent = formatFecha(f); headerTrack.appendChild(marca);
+
+    // === CÁLCULO DINÁMICO DEL RANGO DE FECHAS ===
+    const fechasOrdenadas = [...fechasDisponibles].sort((a,b) => parseFecha(a) - parseFecha(b));
+    const primeraFecha = parseFecha(fechasOrdenadas[0]);
+    const ultimaFecha = parseFecha(fechasOrdenadas[fechasOrdenadas.length - 1]);
+    const fechaHoy = parseFecha(fechaReferencia);
+    
+    // Calcular el rango total de días entre la primera y la última fecha
+    const diasTotales = Math.max(20, diffDias(primeraFecha, ultimaFecha) + 1);
+    
+    // Extender 5 días adicionales después de la última fecha para proyecciones
+    const chartTotalDays = diasTotales + 5;
+    const chartStartDate = primeraFecha;
+
+    // === CABECERA CON MARCAS CADA 5 DÍAS ===
+    const header = document.createElement('div');
+    header.className = 'gantt-header';
+    const empty = document.createElement('div');
+    header.appendChild(empty);
+    const headerTrack = document.createElement('div');
+    headerTrack.className = 'gantt-track-header';
+
+    for (let i = 0; i <= chartTotalDays; i += 5) {
+        const f = addDias(chartStartDate, i);
+        const x = (i / chartTotalDays) * 100;
+        const linea = document.createElement('div');
+        linea.className = 'linea-marca';
+        linea.style.left = `${x}%`;
+        headerTrack.appendChild(linea);
+        const marca = document.createElement('div');
+        marca.className = 'fecha-marca';
+        if (diffDias(f, fechaHoy) === 0) marca.classList.add('hoy');
+        marca.style.left = `${x}%`;
+        marca.textContent = formatFecha(f);
+        headerTrack.appendChild(marca);
     }
-    header.appendChild(headerTrack); grid.appendChild(header);
+    header.appendChild(headerTrack);
+    grid.appendChild(header);
+
+    // === FILAS DE TELARES ===
     const ids = Array.from(allTelares).sort((a,b) => a-b);
     ids.forEach(id => {
-        const row = document.createElement('div'); row.className = 'gantt-row';
-        const label = document.createElement('div'); label.className = 'gantt-label'; const tipoInfo = getTipoTelar(id);
+        const row = document.createElement('div');
+        row.className = 'gantt-row';
+        const label = document.createElement('div');
+        label.className = 'gantt-label';
+        const tipoInfo = getTipoTelar(id);
         label.innerHTML = `<span class="telar-num">T${id}</span><span class="telar-badge-full ${tipoInfo.clase}" title="${tipoInfo.tipo}">${tipoInfo.tipo}</span>`;
         row.appendChild(label);
-        const track = document.createElement('div'); track.className = 'gantt-track'; const chains = loomHistory[id];
+
+        const track = document.createElement('div');
+        track.className = 'gantt-track';
+        const chains = loomHistory[id];
+
         for (let i = 0; i < chains.length; i++) {
-            const chain = chains[i]; if (!chain.startDate) continue;
-            if (i > 0) { const prevChain = chains[i-1]; if (prevChain.endDate) { const gapDias = diffDias(parseFecha(prevChain.endDate), parseFecha(chain.startDate)); if (gapDias > 0) { const gapLeftPos = (diffDias(chartStartDate, parseFecha(prevChain.endDate)) / chartTotalDays) * 100; const gapBlock = document.createElement('div'); gapBlock.className = 'gap-block'; gapBlock.style.left = `${gapLeftPos}%`; gapBlock.style.width = `${Math.max(1, (gapDias / chartTotalDays) * 100)}%`; gapBlock.innerHTML = `<i class="fas fa-hourglass-half"></i> ${gapDias}d`; track.appendChild(gapBlock); } } }
-            const startOffset = Math.max(0, diffDias(chartStartDate, parseFecha(chain.startDate))); let endOffset = chartTotalDays;
-            if (chain.endDate) { endOffset = Math.min(chartTotalDays, diffDias(chartStartDate, parseFecha(chain.endDate))); }
-            else { const remaining = Math.max(0, chain.totalWarp - chain.accumulatedMeters); if (chain.avgDaily > 0 && remaining > 0) endOffset = Math.min(chartTotalDays, diffDias(chartStartDate, addDias(parseFecha(fechaReferencia), Math.ceil(remaining / chain.avgDaily)))); }
-            const duration = Math.max(1, endOffset - startOffset); const leftPos = (startOffset / chartTotalDays) * 100; const widthPos = (duration / chartTotalDays) * 100;
+            const chain = chains[i];
+            if (!chain.startDate) continue;
+            
+            // GAP entre cadenas
+            if (i > 0) {
+                const prevChain = chains[i-1];
+                if (prevChain.endDate) {
+                    const gapDias = diffDias(parseFecha(prevChain.endDate), parseFecha(chain.startDate));
+                    if (gapDias > 0) {
+                        const gapLeftPos = (diffDias(chartStartDate, parseFecha(prevChain.endDate)) / chartTotalDays) * 100;
+                        const gapBlock = document.createElement('div');
+                        gapBlock.className = 'gap-block';
+                        gapBlock.style.left = `${gapLeftPos}%`;
+                        gapBlock.style.width = `${Math.max(1, (gapDias / chartTotalDays) * 100)}%`;
+                        gapBlock.innerHTML = `<i class="fas fa-hourglass-half"></i> ${gapDias}d`;
+                        track.appendChild(gapBlock);
+                    }
+                }
+            }
+            
+            // Cálculo de posición de la cadena
+            const startOffset = Math.max(0, diffDias(chartStartDate, parseFecha(chain.startDate)));
+            let endOffset = chartTotalDays;
+            if (chain.endDate) {
+                endOffset = Math.min(chartTotalDays, diffDias(chartStartDate, parseFecha(chain.endDate)));
+            } else {
+                const remaining = Math.max(0, chain.totalWarp - chain.accumulatedMeters);
+                if (chain.avgDaily > 0 && remaining > 0) {
+                    endOffset = Math.min(chartTotalDays, diffDias(chartStartDate, addDias(parseFecha(fechaReferencia), Math.ceil(remaining / chain.avgDaily))));
+                }
+            }
+
+            const duration = Math.max(1, endOffset - startOffset);
+            const leftPos = (startOffset / chartTotalDays) * 100;
+            const widthPos = (duration / chartTotalDays) * 100;
             const consumedPct = Math.min(100, (chain.accumulatedMeters / chain.totalWarp) * 100);
-            if (i > 0) { const sep = document.createElement('div'); sep.className = 'cambio-separator'; sep.style.left = `${leftPos}%`; track.appendChild(sep); }
-            const barra = document.createElement('div'); barra.className = 'barra'; barra.style.left = `${leftPos}%`; barra.style.width = `${Math.max(2, widthPos)}%`;
+
+            if (i > 0) {
+                const sep = document.createElement('div');
+                sep.className = 'cambio-separator';
+                sep.style.left = `${leftPos}%`;
+                track.appendChild(sep);
+            }
+
+            const barra = document.createElement('div');
+            barra.className = 'barra';
+            barra.style.left = `${leftPos}%`;
+            barra.style.width = `${Math.max(2, widthPos)}%`;
+            
             const grupo = diccionario[chain.estilo] ? diccionario[chain.estilo].grupo : 'default';
             let colorBase = '#78909c';
-            if (grupo === 'denim') colorBase = '#4fc3f7'; else if (grupo === 'colores') colorBase = '#ab47bc'; else if (grupo === 'amazonas') colorBase = '#66bb6a'; else if (grupo === 'twill') colorBase = '#ffa726'; else if (grupo === 'basico') colorBase = '#26c6da'; else if (grupo === 'terry') colorBase = '#ec407a'; else if (grupo === 'satin') colorBase = '#e91e63'; else if (grupo === 'panal') colorBase = '#8bc34a';
+            if (grupo === 'denim') colorBase = '#4fc3f7';
+            else if (grupo === 'colores') colorBase = '#ab47bc';
+            else if (grupo === 'amazonas') colorBase = '#66bb6a';
+            else if (grupo === 'twill') colorBase = '#ffa726';
+            else if (grupo === 'basico') colorBase = '#26c6da';
+            else if (grupo === 'terry') colorBase = '#ec407a';
+            else if (grupo === 'satin') colorBase = '#e91e63';
+            else if (grupo === 'panal') colorBase = '#8bc34a';
             barra.style.background = `linear-gradient(90deg, ${colorBase}, ${colorBase}dd)`;
+
             const infoDicc = diccionario[chain.estilo] || {};
-            barra.dataset.telar = id; barra.dataset.tipoTelar = tipoInfo.tipo; barra.dataset.estilo = chain.estilo;
+            barra.dataset.telar = id;
+            barra.dataset.tipoTelar = tipoInfo.tipo;
+            barra.dataset.estilo = chain.estilo;
             barra.dataset.referencia = infoDicc.referencia || 'N/A';
             barra.dataset.familia = infoDicc.familia || 'N/A';
             barra.dataset.grupoLogistico = infoDicc.grupoLogistico || 'N/A';
             barra.dataset.nombreGrupo = infoDicc.nombreGrupo || 'N/A';
             barra.dataset.ppp = infoDicc.ppp || 'N/A';
             barra.dataset.grupo = grupo.charAt(0).toUpperCase() + grupo.slice(1);
-            barra.dataset.acumulado = chain.accumulatedMeters.toFixed(0); barra.dataset.total = chain.totalWarp;
-            barra.dataset.pct = consumedPct.toFixed(1); barra.dataset.promedio = chain.avgDaily.toFixed(0);
+            barra.dataset.acumulado = chain.accumulatedMeters.toFixed(0);
+            barra.dataset.total = chain.totalWarp;
+            barra.dataset.pct = consumedPct.toFixed(1);
+            barra.dataset.promedio = chain.avgDaily.toFixed(0);
             const remaining = Math.max(0, chain.totalWarp - chain.accumulatedMeters);
             const diasRestantes = chain.avgDaily > 0 ? Math.ceil(remaining / chain.avgDaily) : 0;
-            barra.dataset.restantes = remaining.toFixed(0); barra.dataset.dias = diasRestantes;
+            barra.dataset.restantes = remaining.toFixed(0);
+            barra.dataset.dias = diasRestantes;
             barra.dataset.fechaFin = formatFechaCompleta(addDias(parseFecha(fechaReferencia), diasRestantes));
             barra.dataset.tipo = chain.tipo || 'csv';
-            barra.onmouseenter = showTooltip; barra.onmouseleave = hideTooltip; barra.onmousemove = moveTooltip;
-            const consumido = document.createElement('div'); consumido.className = 'consumido'; consumido.style.width = `${consumedPct}%`; barra.appendChild(consumido);
-            const futuro = document.createElement('div'); futuro.className = 'futuro'; futuro.style.width = `${100 - consumedPct}%`; barra.appendChild(futuro);
-            const texto = document.createElement('div'); texto.className = 'texto';
+
+            barra.onmouseenter = showTooltip;
+            barra.onmouseleave = hideTooltip;
+            barra.onmousemove = moveTooltip;
+
+            const consumido = document.createElement('div');
+            consumido.className = 'consumido';
+            consumido.style.width = `${consumedPct}%`;
+            barra.appendChild(consumido);
+
+            const futuro = document.createElement('div');
+            futuro.className = 'futuro';
+            futuro.style.width = `${100 - consumedPct}%`;
+            barra.appendChild(futuro);
+
+            const texto = document.createElement('div');
+            texto.className = 'texto';
             texto.innerHTML = `<span>${chain.estilo.length > 8 ? chain.estilo.substring(0, 6) + '..' : chain.estilo}</span><span class="pct">${consumedPct.toFixed(0)}%</span>`;
             barra.appendChild(texto);
-            if (remaining > 0 && diasRestantes <= 3 && !chain.endDate) { const alertInd = document.createElement('i'); alertInd.className = 'fas fa-exclamation-circle alerta-indicador'; barra.appendChild(alertInd); }
+
+            if (remaining > 0 && diasRestantes <= 3 && !chain.endDate) {
+                const alertInd = document.createElement('i');
+                alertInd.className = 'fas fa-exclamation-circle alerta-indicador';
+                barra.appendChild(alertInd);
+            }
             track.appendChild(barra);
         }
-        row.appendChild(track); grid.appendChild(row);
+        row.appendChild(track);
+        grid.appendChild(row);
     });
-    const hoyOffset = diffDias(chartStartDate, hoy);
+
+    // === LÍNEA "HOY" ===
+    const hoyOffset = diffDias(chartStartDate, fechaHoy);
     if (hoyOffset >= 0 && hoyOffset <= chartTotalDays) {
-        const hoyX = (hoyOffset / chartTotalDays) * 100; const lineaHoy = document.createElement('div'); lineaHoy.className = 'linea-hoy-container';
-        const labelWidth = 170; const trackWidth = container.offsetWidth - labelWidth - 4;
-        lineaHoy.style.left = `${labelWidth + 4 + (hoyX / 100) * trackWidth}px`; container.appendChild(lineaHoy);
+        const hoyX = (hoyOffset / chartTotalDays) * 100;
+        const lineaHoy = document.createElement('div');
+        lineaHoy.className = 'linea-hoy-container';
+        const labelWidth = 170;
+        const containerWidth = container.offsetWidth;
+        const trackWidth = containerWidth - labelWidth - 4;
+        lineaHoy.style.left = `${labelWidth + 4 + (hoyX / 100) * trackWidth}px`;
+        container.appendChild(lineaHoy);
     }
 }
-
 // ============================================================
 // TOOLTIP CON DATOS DEL DICCIONARIO
 // ============================================================
