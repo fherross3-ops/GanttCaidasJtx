@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificador de Urdimbres - Sala 97</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+        body{background:#0a1628;color:#e8edf5;padding:10px;min-height:100vh}
+        .dashboard{max-width:1400px;margin:0 auto;background:linear-gradient(145deg,#0f1f33,#0a1628);border-radius:12px;padding:12px 16px;border:1px solid rgba(255,255,255,0.05)}
+        .header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)}
+        .header-left{display:flex;align-items:center;gap:6px}
+        .header-left i{font-size:1.2rem;color:#4fc3f7;background:rgba(79,195,247,0.1);padding:5px;border-radius:6px}
+        .header-left h1{font-size:1rem;font-weight:600;background:linear-gradient(135deg,#4fc3f7,#81d4fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .header-left .subtitle{font-size:0.5rem;color:#8899bb}
+        .header-right{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);padding:3px 10px;border-radius:40px;border:1px solid rgba(255,255,255,0.06);font-size:0.65rem;color:#b0c4e8}
+        .action-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding:4px 10px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.05);align-items:center}
+        .action-bar .action-btn{background:rgba(79,195,247,0.12);border:1px solid rgba(79,195,247,0.2);color:#4fc3f7;padding:3px 12px;border-radius:40px;cursor:pointer;font-size:0.6rem;font-weight:500;transition:all 0.2s}
+        .action-bar .action-btn:hover{background:rgba(79,195,247,0.25)}
+        .action-bar .action-btn.warning{background:rgba(255,183,77,0.12);border-color:rgba(255,183,77,0.2);color:#ffb74d}
+        .action-bar .action-btn.danger{background:rgba(239,83,80,0.12);border-color:rgba(239,83,80,0.2);color:#ef5350}
+        .action-bar .spacer{flex:1}
+        .fecha-selector{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.03);padding:2px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);margin-bottom:8px;flex-wrap:wrap}
+        .fecha-selector label{color:#8899bb;font-size:0.6rem}
+        .fecha-selector select,.modal .form-group select,.modal .form-group input{background:#0f1f33!important;border:1px solid rgba(79,195,247,0.3);color:#e8edf5!important;padding:5px 8px;border-radius:4px;font-size:0.7rem;outline:none;cursor:pointer}
+        .fecha-selector select option,.modal .form-group select option{background:#0f1f33!important;color:#e8edf5!important;padding:6px 8px}
+        .fecha-selector .btn-nav{background:rgba(79,195,247,0.1);border:none;color:#4fc3f7;padding:1px 6px;border-radius:4px;cursor:pointer;font-size:0.6rem}
+        .kpi-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px}
+        @media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(4,1fr)}}
+        @media(max-width:768px){.kpi-grid{grid-template-columns:1fr 1fr}}
+        .kpi-card{background:rgba(255,255,255,0.04);border-radius:6px;padding:4px 10px;border:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:6px}
+        .kpi-card.highlight{background:rgba(79,195,247,0.08);border-color:rgba(79,195,247,0.2)}
+        .kpi-card.warning-card{background:rgba(255,183,77,0.08);border-color:rgba(255,183,77,0.2)}
+        .kpi-icon{width:22px;height:22px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;flex-shrink:0}
+        .kpi-icon.blue{background:rgba(79,195,247,0.15);color:#4fc3f7}
+        .kpi-icon.red{background:rgba(239,83,80,0.15);color:#ef5350}
+        .kpi-icon.orange{background:rgba(255,183,77,0.15);color:#ffb74d}
+        .kpi-icon.purple{background:rgba(171,71,188,0.15);color:#ab47bc}
+        .kpi-icon.green{background:rgba(76,175,80,0.15);color:#4caf50}
+        .kpi-icon.cyan{background:rgba(38,198,218,0.15);color:#26c6da}
+        .kpi-icon.pink{background:rgba(236,64,122,0.15);color:#ec407a}
+        .kpi-info .kpi-label{font-size:0.4rem;text-transform:uppercase;color:#8899bb;font-weight:600}
+        .kpi-info .kpi-value{font-size:0.95rem;font-weight:700;color:#e8edf5;line-height:1.2}
+        .kpi-info .kpi-sub{font-size:0.4rem;color:#6688aa}
+        .alert-banner{display:none;background:linear-gradient(90deg,rgba(255,183,77,0.15),rgba(239,83,80,0.15));border:1px solid rgba(255,183,77,0.3);border-radius:6px;padding:6px 12px;margin-bottom:8px;font-size:0.6rem;color:#ffb74d}
+        .alert-banner.active{display:block}
+        .gantt-section{background:rgba(255,255,255,0.03);border-radius:8px;padding:8px;border:1px solid rgba(255,255,255,0.06);margin:4px 0;height:calc(100vh - 340px);min-height:300px;overflow:hidden;display:flex;flex-direction:column}
+        .gantt-section .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-shrink:0;flex-wrap:wrap;gap:6px}
+        .gantt-section .section-header h3{font-weight:600;font-size:0.7rem;color:#b0c4e8}
+        .telares-leyenda{display:flex;gap:8px;flex-wrap:wrap;font-size:0.5rem;color:#8899bb;padding:4px 8px;background:rgba(255,255,255,0.02);border-radius:4px;border:1px solid rgba(255,255,255,0.05)}
+        .telares-leyenda .ley-item{display:flex;align-items:center;gap:3px}
+        .telares-leyenda .ley-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:14px;padding:0 3px;border-radius:3px;font-size:0.4rem;font-weight:800;color:#fff;letter-spacing:0.3px}
+        .ley-badge.omni{background:linear-gradient(135deg,#2196f3,#1976d2)}
+        .ley-badge.dobby{background:linear-gradient(135deg,#9c27b0,#7b1fa2)}
+        .ley-badge.p380{background:linear-gradient(135deg,#4caf50,#388e3c)}
+        .ley-badge.oplus{background:linear-gradient(135deg,#00bcd4,#0097a7)}
+        .ley-badge.terry{background:linear-gradient(135deg,#ff9800,#f57c00)}
+        .ley-badge.np{background:linear-gradient(135deg,#e91e63,#c2185b)}
+        .gantt-container{flex:1;overflow:auto;position:relative}
+        .gantt-grid{display:flex;flex-direction:column;gap:1px;min-width:1400px;height:100%;position:relative}
+        .gantt-header{display:grid;grid-template-columns:170px 1fr;gap:4px;align-items:end;flex-shrink:0;margin-bottom:2px}
+        .gantt-header .gantt-track-header{position:relative;height:35px;background:transparent;border-bottom:1px solid rgba(255,255,255,0.08)}
+        .gantt-header .gantt-track-header .fecha-marca{position:absolute;bottom:4px;font-size:0.65rem;color:#fff;transform:translateX(-50%);white-space:nowrap;font-weight:700;text-shadow:0 2px 4px rgba(0,0,0,0.8)}
+        .gantt-header .gantt-track-header .fecha-marca.hoy{color:#ffb74d;font-size:0.75rem;text-shadow:0 0 8px rgba(255,183,77,0.6)}
+        .gantt-header .gantt-track-header .linea-marca{position:absolute;top:0;width:1px;height:100%;background:rgba(255,255,255,0.1);border-right:1px dashed rgba(255,255,255,0.15);transform:translateX(-0.5px)}
+        .gantt-row{display:grid;grid-template-columns:170px 1fr;gap:4px;align-items:center;min-height:32px;flex-shrink:0}
+        .gantt-row .gantt-label{display:flex;flex-direction:column;align-items:flex-end;gap:2px;cursor:pointer;padding-right:4px}
+        .gantt-row .gantt-label .telar-num{font-size:0.95rem;font-weight:700;color:#4fc3f7;letter-spacing:0.5px}
+        .gantt-row .gantt-label .telar-badge-full{display:inline-flex;align-items:center;justify-content:flex-end;padding:1px 6px;border-radius:3px;font-size:0.45rem;font-weight:700;color:#fff;letter-spacing:0.3px;box-shadow:0 1px 3px rgba(0,0,0,0.4);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+        .telar-badge-full.omni{background:linear-gradient(135deg,#2196f3,#1976d2)}
+        .telar-badge-full.dobby{background:linear-gradient(135deg,#9c27b0,#7b1fa2)}
+        .telar-badge-full.default{background:linear-gradient(135deg,#607d8b,#455a64)}
+        .gantt-row .gantt-track{position:relative;height:28px;background:rgba(255,255,255,0.02);border-radius:3px;overflow:visible}
+        .gantt-row .gantt-track .barra{position:absolute;height:100%;display:flex;align-items:center;cursor:pointer;z-index:2;transition:all 0.3s ease;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 50%,calc(100% - 8px) 100%,8px 100%,0 50%)}
+        .gantt-row .gantt-track .barra:hover{filter:brightness(1.3);transform:scaleY(1.1);z-index:10}
+        .gantt-row .gantt-track .barra .consumido{position:absolute;left:0;top:0;height:100%;background:#4caf50;opacity:0.9}
+        .gantt-row .gantt-track .barra .futuro{position:absolute;right:0;top:0;height:100%;background:rgba(255,255,255,0.08);border-left:2px dashed rgba(255,255,255,0.4)}
+        .gantt-row .gantt-track .barra .texto{position:relative;z-index:3;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.9);display:flex;align-items:center;gap:6px;width:100%;justify-content:space-between;padding:0 14px;font-size:0.65rem;font-weight:800}
+        .gantt-row .gantt-track .barra .texto .pct{background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:4px;font-size:0.55rem;font-weight:900;border:1px solid rgba(255,255,255,0.2)}
+        .gantt-row .gantt-track .barra .alerta-indicador{position:absolute;right:-4px;top:-8px;font-size:0.7rem;z-index:4;animation:pulse 1.5s infinite}
+        .alerta-critico{color:#ef5350;filter:drop-shadow(0 0 3px rgba(239,83,80,0.8))}
+        .alerta-urgente{color:#ff9800;filter:drop-shadow(0 0 3px rgba(255,152,0,0.8))}
+        .alerta-atencion{color:#ffb74d;filter:drop-shadow(0 0 3px rgba(255,183,77,0.8))}
+        .alerta-planificacion{color:#66bb6a;filter:drop-shadow(0 0 3px rgba(102,187,106,0.8))}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.7;transform:scale(1.1)}}
+        .cambio-separator{position:absolute;top:-4px;bottom:-4px;width:2px;background:#fff;border-left:1px dashed #000;z-index:5;opacity:0.7}
+        .linea-hoy-container{position:absolute;top:0;bottom:0;width:2px;background:linear-gradient(180deg,#ffb74d,#ff9800,#ffb74d);z-index:50;pointer-events:none;box-shadow:0 0 8px rgba(255,183,77,0.8)}
+        .linea-hoy-container::before{content:'HOY';position:absolute;top:-2px;left:50%;transform:translateX(-50%);background:#ff9800;color:#0a1628;padding:2px 8px;border-radius:4px;font-size:0.55rem;font-weight:900;letter-spacing:1px;white-space:nowrap}
+        #customTooltip{position:fixed;display:none;background:rgba(15,31,51,0.97);border:2px solid #4fc3f7;border-radius:10px;padding:14px;color:#e8edf5;font-size:0.75rem;z-index:2000;pointer-events:none;box-shadow:0 6px 24px rgba(0,0,0,0.6);min-width:300px}
+        #customTooltip h4{color:#4fc3f7;margin-bottom:8px;font-size:0.9rem;border-bottom:2px solid rgba(79,195,247,0.3);padding-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+        #customTooltip .row{display:flex;justify-content:space-between;margin-bottom:4px;gap:12px}
+        #customTooltip .label{color:#8899bb;font-size:0.7rem;font-weight:500}
+        #customTooltip .value{font-weight:600;color:#fff;font-size:0.7rem;text-align:right}
+        #customTooltip .highlight{color:#ffb74d;font-weight:700}
+        #customTooltip .divider{border:0;border-top:1px solid rgba(255,255,255,0.15);margin:6px 0}
+        #customTooltip .info-section{background:rgba(79,195,247,0.08);border-left:3px solid #4fc3f7;padding:6px 10px;margin:6px 0;border-radius:4px}
+        #customTooltip .info-section .info-row{display:flex;justify-content:space-between;margin-bottom:3px;gap:8px}
+        #customTooltip .info-section .label{color:#4fc3f7;font-size:0.65rem;font-weight:600;text-transform:uppercase}
+        #customTooltip .info-section .value{color:#e8edf5;font-size:0.75rem;font-weight:700}
+        .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;justify-content:center;align-items:center;padding:20px}
+        .modal-overlay.active{display:flex}
+        .modal{background:#0f1f33;border-radius:8px;padding:14px;max-width:600px;width:100%;border:1px solid rgba(255,255,255,0.1);max-height:90vh;overflow-y:auto}
+        .modal h2{font-size:0.85rem;margin-bottom:3px;color:#e8edf5}
+        .modal .form-group{margin-bottom:8px}
+        .modal .form-group label{display:block;color:#b0c4e8;font-size:0.6rem;font-weight:500;margin-bottom:2px}
+        .modal .btn-group-modal{display:flex;gap:6px;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);flex-wrap:wrap}
+        .modal .btn-cancelar{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:#b0c4e8;padding:4px 14px;border-radius:40px;cursor:pointer;font-size:0.6rem}
+        .modal .btn-guardar{background:#4fc3f7;color:#0a1628;padding:4px 14px;border-radius:40px;border:none;cursor:pointer;font-size:0.6rem;font-weight:600}
+        .modal .btn-action{background:#ffb74d;color:#0a1628;padding:4px 14px;border-radius:40px;border:none;cursor:pointer;font-size:0.6rem;font-weight:600}
+        .modal .btn-danger{background:rgba(239,83,80,0.8);color:#fff;padding:4px 14px;border-radius:40px;border:none;cursor:pointer;font-size:0.6rem;font-weight:600}
+        .modal .btn-secondary{background:rgba(171,71,188,0.3);color:#ce93d8;padding:4px 14px;border-radius:40px;border:1px solid rgba(171,71,188,0.4);cursor:pointer;font-size:0.6rem;font-weight:600}
+        .inv-table{width:100%;border-collapse:collapse;font-size:0.65rem}
+        .inv-table th{text-align:left;padding:4px 6px;color:#4fc3f7;border-bottom:1px solid rgba(79,195,247,0.3);font-size:0.6rem}
+        .inv-table td{padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.05);color:#b0c4e8}
+        .inv-table tr:hover{background:rgba(79,195,247,0.05)}
+        .inv-table .qty-input{width:60px;padding:2px 6px;background:rgba(255,255,255,0.05);border:1px solid rgba(79,195,247,0.3);border-radius:4px;color:#4fc3f7;font-weight:700;font-size:0.7rem;text-align:center}
+        .inv-table .btn-icon{background:transparent;border:none;cursor:pointer;padding:2px 6px;font-size:0.7rem;transition:all 0.2s}
+        .inv-table .btn-icon.delete{color:#ef5350}
+        .inv-table .btn-icon.save{color:#4caf50}
+        .inv-toolbar{display:flex;gap:6px;margin-bottom:8px;padding:6px;background:rgba(79,195,247,0.05);border-radius:6px;border:1px solid rgba(79,195,247,0.15);flex-wrap:wrap}
+        .inv-stats{display:flex;gap:12px;padding:6px 10px;margin-bottom:8px;background:rgba(255,255,255,0.03);border-radius:6px;font-size:0.6rem;flex-wrap:wrap}
+        .inv-stats .stat-item{display:flex;gap:4px;align-items:center}
+        .inv-stats .stat-value{color:#4fc3f7;font-weight:700;font-size:0.75rem}
+        .tabla-alertas{width:100%;border-collapse:collapse;font-size:0.55rem}
+        .tabla-alertas th{text-align:left;padding:3px 5px;color:#4fc3f7;border-bottom:1px solid rgba(255,255,255,0.08)}
+        .tabla-alertas td{padding:3px 5px;border-bottom:1px solid rgba(255,255,255,0.04);color:#b0c4e8}
+        .badge-critico{background:rgba(239,83,80,0.2);color:#ef5350;padding:1px 5px;border-radius:40px;font-size:0.45rem;font-weight:600}
+        .badge-urgente{background:rgba(255,152,0,0.2);color:#ff9800;padding:1px 5px;border-radius:40px;font-size:0.45rem;font-weight:600}
+        .badge-atencion{background:rgba(255,183,77,0.2);color:#ffb74d;padding:1px 5px;border-radius:40px;font-size:0.45rem;font-weight:600}
+        .badge-planificacion{background:rgba(102,187,106,0.2);color:#66bb6a;padding:1px 5px;border-radius:40px;font-size:0.45rem;font-weight:600}
+        .bulk-import{width:100%;min-height:60px;padding:6px;background:rgba(255,255,255,0.03);border:1px dashed rgba(79,195,247,0.3);border-radius:4px;color:#e8edf5;font-size:0.65rem;font-family:'Consolas',monospace;resize:vertical}
+        .loading-indicator{position:fixed;top:20px;right:20px;background:rgba(79,195,247,0.95);color:#0a1628;padding:12px 20px;border-radius:8px;font-weight:700;z-index:3000;display:none;box-shadow:0 4px 20px rgba(79,195,247,0.4)}
+        .loading-indicator.active{display:block;animation:slideIn 0.3s ease}
+        @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+        .loading-indicator .progress{font-size:0.7rem;margin-top:4px;opacity:0.8}
+        .estilo-desconocido{background:rgba(239,83,80,0.1);border:1px solid rgba(239,83,80,0.3);border-radius:4px;padding:6px 10px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;font-size:0.6rem}
+        .estilo-desconocido .nombre{color:#ef5350;font-weight:700}
+        .estilo-desconocido .info{color:#8899bb}
+        .alert-section{margin-bottom:10px}
+        .alert-section h4{font-size:0.65rem;margin-bottom:4px;display:flex;align-items:center;gap:4px}
+        @media(max-width:768px){.gantt-section{height:calc(100vh - 280px);min-height:200px}.gantt-header{grid-template-columns:130px 1fr}.gantt-row{grid-template-columns:130px 1fr}}
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="header">
+        <div class="header-left"><i class="fas fa-robot"></i><div><h1>Planificador de Urdimbres</h1><span class="subtitle">Sala 97 - 97 Telares Denim</span></div></div>
+        <div class="header-right"><i class="fas fa-calendar-alt"></i><span id="fechaActual">--/--/----</span></div>
+    </div>
+    <div class="action-bar">
+        <button class="action-btn" id="btnCargarCSV"><i class="fas fa-upload"></i> Cargar CSV</button>
+        <button class="action-btn" id="btnRecargar"><i class="fas fa-sync"></i> Recargar GitHub</button>
+        <button class="action-btn" id="btnInventario"><i class="fas fa-warehouse"></i> Inventario</button>
+        <button class="action-btn" id="btnDiccionario"><i class="fas fa-book"></i> Diccionario</button>
+        <button class="action-btn warning" id="btnAlertas"><i class="fas fa-bell"></i> Alertas</button>
+        <span class="spacer"></span>
+        <span style="font-size:0.5rem;color:#66bb6a" id="estadoDatos">Sin datos</span>
+    </div>
+    <div class="alert-banner" id="alertBanner"><i class="fas fa-exclamation-triangle"></i><span id="alertBannerText"></span></div>
+    <div class="fecha-selector">
+        <label><i class="fas fa-calendar-day"></i> Fecha:</label>
+        <select id="selectorFecha"></select>
+        <button class="btn-nav" id="btnFechaAnterior"><i class="fas fa-chevron-left"></i></button>
+        <button class="btn-nav" id="btnFechaSiguiente"><i class="fas fa-chevron-right"></i></button>
+        <span style="font-size:0.5rem;color:#6688aa;margin-left:auto" id="infoFechas">0 días</span>
+    </div>
+    <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-icon blue"><i class="fas fa-industry"></i></div><div class="kpi-info"><div class="kpi-label">Activos</div><div class="kpi-value" id="kpiActivos">0</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon red"><i class="fas fa-exclamation-triangle"></i></div><div class="kpi-info"><div class="kpi-label">Parados</div><div class="kpi-value" id="kpiParados">0</div></div></div>
+        <div class="kpi-card"><div class="kpi-icon orange"><i class="fas fa-clock"></i></div><div class="kpi-info"><div class="kpi-label">Disponibilidad</div><div class="kpi-value" id="kpiDisponibilidad">0%</div><div class="kpi-sub">% telares activos</div></div></div>
+        <div class="kpi-card highlight"><div class="kpi-icon green"><i class="fas fa-ruler-combined"></i></div><div class="kpi-info"><div class="kpi-label">Metros Tejidos</div><div class="kpi-value" id="kpiMetrosTejidos">0</div><div class="kpi-sub">acumulado</div></div></div>
+        <div class="kpi-card highlight"><div class="kpi-icon cyan"><i class="fas fa-bullseye"></i></div><div class="kpi-info"><div class="kpi-label">Metros por Tejer</div><div class="kpi-value" id="kpiMetrosFaltan">0</div><div class="kpi-sub">proyección</div></div></div>
+        <div class="kpi-card warning-card"><div class="kpi-icon pink"><i class="fas fa-exchange-alt"></i></div><div class="kpi-info"><div class="kpi-label">Cambios &lt;3d</div><div class="kpi-value" id="kpiCambios">0</div><div class="kpi-sub">críticos</div></div></div>
+        <div class="kpi-card warning-card"><div class="kpi-icon purple"><i class="fas fa-boxes"></i></div><div class="kpi-info"><div class="kpi-label">Cobertura Inv.</div><div class="kpi-value" id="kpiCobertura">0%</div><div class="kpi-sub" id="kpiCoberturaSub">0 días</div></div></div>
+    </div>
+    <div class="gantt-section">
+        <div class="section-header">
+            <h3><i class="fas fa-chart-gantt"></i> Cronología Sala 97</h3>
+            <div class="telares-leyenda">
+                <div class="ley-item"><span class="ley-badge omni">OM</span> OMNI 220 (1-82)</div>
+                <div class="ley-item"><span class="ley-badge dobby">DB</span> DOBBY 220</div>
+            </div>
+        </div>
+        <div class="gantt-container" id="ganttContainer"><div class="gantt-grid" id="ganttGrid"></div></div>
+    </div>
+</div>
+<div id="customTooltip"></div>
+<div id="loadingIndicator" class="loading-indicator"><i class="fas fa-spinner fa-spin"></i> Cargando...<div class="progress" id="loadingProgress"></div></div>
+
+<div class="modal-overlay" id="modalInventario">
+    <div class="modal">
+        <h2><i class="fas fa-warehouse" style="color:#4fc3f7"></i> Inventario</h2>
+        <p style="font-size:0.6rem;color:#8899bb;margin-bottom:10px">Edita cantidades directamente.</p>
+        <div class="inv-stats" id="invStats"></div>
+        <div class="inv-toolbar">
+            <button class="btn-guardar" id="btnAgregarItem"><i class="fas fa-plus"></i> Agregar</button>
+            <button class="btn-secondary" id="btnBulkImport"><i class="fas fa-file-import"></i> Masiva</button>
+            <button class="btn-danger" id="btnResetInv"><i class="fas fa-trash"></i> Reset 0</button>
+        </div>
+        <div style="max-height:300px;overflow-y:auto;border:1px solid rgba(255,255,255,0.05);border-radius:4px">
+            <table class="inv-table"><thead><tr><th>Estilo</th><th>Grupo</th><th style="text-align:center">Stock</th><th style="text-align:center">Acc.</th></tr></thead><tbody id="invTableBody"></tbody></table>
+        </div>
+        <div class="btn-group-modal"><button class="btn-cancelar" id="btnCerrarInv">Cerrar</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="modalAgregarItem">
+    <div class="modal">
+        <h2><i class="fas fa-plus-circle" style="color:#4caf50"></i> Agregar Estilo</h2>
+        <div class="form-group"><label>Estilo</label><select id="nuevoItemEstilo"></select></div>
+        <div class="form-group"><label>Cantidad</label><input type="number" id="nuevoItemCantidad" min="0" value="1"></div>
+        <div class="btn-group-modal"><button class="btn-cancelar" id="btnCancelarAgregar">Cancelar</button><button class="btn-guardar" id="btnConfirmarAgregar">Agregar</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="modalBulkImport">
+    <div class="modal">
+        <h2><i class="fas fa-file-import" style="color:#ab47bc"></i> Importación Masiva</h2>
+        <p style="font-size:0.6rem;color:#8899bb;margin-bottom:8px">Formato: ESTILO=CANTIDAD</p>
+        <textarea class="bulk-import" id="bulkText" placeholder="NOVA=5&#10;BULLDENIM L=3"></textarea>
+        <div class="btn-group-modal"><button class="btn-cancelar" id="btnCancelarBulk">Cancelar</button><button class="btn-guardar" id="btnConfirmarBulk">Importar</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="modalDiccionario">
+    <div class="modal" style="max-width:700px">
+        <h2><i class="fas fa-book" style="color:#4fc3f7"></i> Diccionario de Estilos</h2>
+        <p style="font-size:0.6rem;color:#8899bb;margin-bottom:10px">Gestiona estilos registrados y desconocidos.</p>
+        <div id="estilosDesconocidos"></div>
+        <h3 style="font-size:0.7rem;color:#b0c4e8;margin:8px 0 4px">Estilos Registrados</h3>
+        <div style="max-height:300px;overflow-y:auto;border:1px solid rgba(255,255,255,0.05);border-radius:4px">
+            <table class="inv-table"><thead><tr><th>Estilo</th><th>Familia</th><th>Grupo Log.</th><th>Metros</th></tr></thead><tbody id="diccTableBody"></tbody></table>
+        </div>
+        <div class="btn-group-modal"><button class="btn-cancelar" id="btnCerrarDicc">Cerrar</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="modalAgregarEstilo">
+    <div class="modal">
+        <h2><i class="fas fa-plus-circle" style="color:#4caf50"></i> Registrar Estilo</h2>
+        <div class="form-group"><label>Nombre del Estilo</label><input type="text" id="regEstiloNombre"></div>
+        <div class="form-group"><label>Referencia</label><input type="text" id="regEstiloRef" placeholder="Ej: 0115-43647"></div>
+        <div class="form-group"><label>Familia</label><input type="text" id="regEstiloFamilia" placeholder="Ej: F5600"></div>
+        <div class="form-group"><label>Grupo Logístico</label><input type="text" id="regEstiloGrupo" placeholder="Ej: F5600-G1"></div>
+        <div class="form-group"><label>Nombre del Grupo</label><input type="text" id="regEstiloNombreGrupo" placeholder="Ej: Satin Base"></div>
+        <div class="form-group"><label>Metros de Plegador</label><input type="number" id="regEstiloMetros" min="1" value="2300"></div>
+        <div class="form-group"><label>PPP</label><input type="number" id="regEstiloPPP" min="1" value="44"></div>
+        <div class="form-group"><label>Grupo (color)</label><select id="regEstiloColor"><option value="denim">Denim</option><option value="colores">Colores</option><option value="satin">Satin</option><option value="basico">Básico</option><option value="amazonas">Amazonas</option><option value="twill">Twill</option><option value="terry">Terry</option><option value="panal">Pañal</option></select></div>
+        <div class="btn-group-modal"><button class="btn-cancelar" id="btnCancelarReg">Cancelar</button><button class="btn-guardar" id="btnConfirmarReg">Registrar</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="modalAlertas">
+    <div class="modal" style="max-width:700px">
+        <h2><i class="fas fa-bell" style="color:#ffb74d"></i> Centro de Alertas</h2>
+        <div id="alertasContenido"></div>
+        <div class="btn-group-modal"><button class="btn-cancelar" id="btnCerrarAlertas">Cerrar</button></div>
+    </div>
+</div>
+<div class="modal-overlay" id="modalReemplazo">
+    <div class="modal">
+        <h2><i class="fas fa-sync-alt" style="color:#4caf50"></i> Programar Reemplazo</h2>
+        <p style="font-size:0.6rem;color:#8899bb;margin-bottom:8px" id="reemplazoSubtitulo">Telar T--</p>
+        <div class="form-group"><label>Estilo Sugerido</label><select id="repEstilo"></select></div>
+        <div class="form-group"><label>Stock</label><input type="text" id="repStock" disabled style="background:rgba(255,255,255,0.02);color:#8899bb"></div>
+        <div class="form-group"><label>Metros Totales</label><input type="number" id="repMetros" min="1"></div>
+        <div class="form-group"><label>Promedio Diario</label><input type="number" id="repPromedio" min="1"></div>
+        <div class="btn-group-modal"><button class="btn-cancelar" id="btnCancelarRep">Cancelar</button><button class="btn-guardar" id="btnConfirmarRep">Confirmar</button></div>
+    </div>
+</div>
+
+<script>
+// ========== DICCIONARIO ==========
+const diccionarioBase = {
+    'ALEXA':{metros:2300,grupo:'denim',referencia:'0105-43656',familia:'F4152',grupoLogistico:'F4152-G1',nombreGrupo:'Indigo 14,22 derecha',ppp:37},
+    'ALEXA L':{metros:2300,grupo:'denim',referencia:'0105-43666',familia:'F4152',grupoLogistico:'F4152-G1',nombreGrupo:'Indigo 14,22 derecha',ppp:37},
+    'ALEXA STRETCH':{metros:2300,grupo:'denim',referencia:'0115-43670',familia:'F4152',grupoLogistico:'F4152-G1',nombreGrupo:'Indigo 14,22 derecha',ppp:37},
+    'ARANDANO DARK CONFORT':{metros:2300,grupo:'colores',referencia:'0115-43623',familia:'F4690',grupoLogistico:'F4690-G1',nombreGrupo:'Arandano/Aurora Base',ppp:44},
+    'ARANDANO DARK':{metros:2300,grupo:'colores',referencia:'0105-49470',familia:'F4690',grupoLogistico:'F4690-G1',nombreGrupo:'Arandano/Aurora Base',ppp:44},
+    'ARANDANO RING':{metros:2300,grupo:'colores',referencia:'0105-49470',familia:'F4690',grupoLogistico:'F4690-G2',nombreGrupo:'Arandano slub',ppp:44},
+    'ARANDANO CROSS':{metros:2300,grupo:'colores',referencia:'0105-49470',familia:'F4690',grupoLogistico:'F4690-G2',nombreGrupo:'Arandano slub',ppp:44},
+    'BLUEBERRY':{metros:2300,grupo:'colores',referencia:'0115-43689',familia:'F4690',grupoLogistico:'F4690-G1',nombreGrupo:'Arandano/Aurora Base',ppp:44},
+    'BLACKBERRY':{metros:2300,grupo:'colores',referencia:'0115-43690',familia:'F4690',grupoLogistico:'F4690-G1',nombreGrupo:'Arandano/Aurora Base',ppp:44},
+    'MULBERRY':{metros:2300,grupo:'colores',referencia:'0115-43690',familia:'F4690',grupoLogistico:'F4690-G1',nombreGrupo:'Arandano/Aurora Base',ppp:44},
+    'ARANDANO NEGRO':{metros:2300,grupo:'colores',referencia:'0105-43621',familia:'F4690',grupoLogistico:'F4690-G1',nombreGrupo:'Arandano/Aurora Base',ppp:44},
+    'ARANDANO DARK STRETCH':{metros:2300,grupo:'colores',referencia:'0115-43671',familia:'F4690',grupoLogistico:'F4690-G1',nombreGrupo:'Arandano/Aurora Base',ppp:44},
+    'AURORA':{metros:2300,grupo:'colores',referencia:'0105-43640',familia:'F4690',grupoLogistico:'F4690-G1',nombreGrupo:'Arandano/Aurora Base',ppp:44},
+    'AURORA BLACK':{metros:2300,grupo:'colores',referencia:'0105-43640',familia:'F4690',grupoLogistico:'F4690-G1',nombreGrupo:'Arandano/Aurora Base',ppp:44},
+    'BARCELONA SMOOTH DARK':{metros:2300,grupo:'denim',referencia:'0115-49480',familia:'F4452',grupoLogistico:'F4452-G1',nombreGrupo:'Barcelona Smooth',ppp:52},
+    'BLUE GINGER':{metros:2300,grupo:'denim',referencia:'0105-43620',familia:'F4690',grupoLogistico:'F4690-G5',nombreGrupo:'Blue Ginger/Paraguana',ppp:34},
+    'BULLDENIM 11':{metros:2300,grupo:'denim',referencia:'0105-43662',familia:'F4152',grupoLogistico:'F4152-G2',nombreGrupo:'Bulldenim 14,22 Izquierda',ppp:36},
+    'BULLDENIM L':{metros:2300,grupo:'denim',referencia:'0105-43667',familia:'F4152',grupoLogistico:'F4152-G2',nombreGrupo:'Bulldenim 14,22 Izquierda',ppp:36},
+    'BULLDENIM':{metros:2300,grupo:'denim',referencia:'0105-43667',familia:'F4152',grupoLogistico:'F4152-G2',nombreGrupo:'Bulldenim 14,22 Izquierda',ppp:36},
+    'AMAZONAS XIII':{metros:2200,grupo:'amazonas',referencia:'0110-43681',familia:'F6230',grupoLogistico:'F6230-G1',nombreGrupo:'Amazonas/Senat',ppp:45},
+    'AMAZONAS XVII':{metros:2200,grupo:'amazonas',referencia:'0110-43681',familia:'F6230',grupoLogistico:'F6230-G1',nombreGrupo:'Amazonas/Senat',ppp:45},
+    'CEPE BLACK':{metros:2200,grupo:'denim',referencia:'0115-31501',familia:'F4152',grupoLogistico:'F4152-G3',nombreGrupo:'Cepe/Fashion peine 25,98',ppp:46},
+    'CEPE DARK':{metros:2300,grupo:'denim',referencia:'0115-42305',familia:'F4152',grupoLogistico:'F4152-G3',nombreGrupo:'Cepe/Fashion peine 25,98',ppp:46},
+    'DRILL MARACAY':{metros:2500,grupo:'basico',referencia:'0105-43711',familia:'F5568',grupoLogistico:'F5568-G1',nombreGrupo:'Drill Maracay',ppp:46},
+    'DRILL 419':{metros:2500,grupo:'basico',referencia:'0115-43680',familia:'F7360',grupoLogistico:'F7360-G1',nombreGrupo:'Drill 419',ppp:40},
+    'DRILL 421':{metros:2300,grupo:'basico',referencia:'0105-28502',familia:'F4152',grupoLogistico:'F4152-G4',nombreGrupo:'Oxigeno/Helio/Drill421',ppp:38},
+    'FARINA':{metros:2300,grupo:'colores',referencia:'0199-18860',familia:'F4690',grupoLogistico:'F4690-G4',nombreGrupo:'Farina',ppp:34},
+    'FARINA RING':{metros:2300,grupo:'colores',referencia:'0199-18860',familia:'F4690',grupoLogistico:'F4690-G4',nombreGrupo:'Farina',ppp:34},
+    'FARINA CROSS':{metros:2300,grupo:'colores',referencia:'0199-18860',familia:'F4690',grupoLogistico:'F4690-G4',nombreGrupo:'Farina',ppp:34},
+    'BLACK FASHION':{metros:2300,grupo:'denim',referencia:'0115-43673',familia:'F4152',grupoLogistico:'F4152-G3',nombreGrupo:'Cepe/Fashion peine 25,98',ppp:44},
+    'FASHION BLACK NEW':{metros:2300,grupo:'denim',referencia:'0115-43673',familia:'F4152',grupoLogistico:'F4152-G3',nombreGrupo:'Cepe/Fashion peine 25,98',ppp:44},
+    'NEPTUNO':{metros:2100,grupo:'denim',referencia:'0115-03501',familia:'F4152',grupoLogistico:'F4152-G3',nombreGrupo:'Cepe/Fashion peine 25,98',ppp:44},
+    'FASHION OSCURO':{metros:2100,grupo:'denim',referencia:'0115-42405',familia:'F4152',grupoLogistico:'F4152-G3',nombreGrupo:'Cepe/Fashion peine 25,98',ppp:44},
+    'NEMESIS':{metros:2100,grupo:'denim',referencia:'0115-43817',familia:'F4152',grupoLogistico:'F4152-G3',nombreGrupo:'Cepe/Fashion peine 25,98',ppp:44},
+    'INDIGO OSCURO DARK BLUE':{metros:2300,grupo:'denim',referencia:'0120-41905',familia:'F4152',grupoLogistico:'F4152-G1',nombreGrupo:'Indigo 14,22 derecha',ppp:36},
+    'INDIGO SOFT':{metros:2100,grupo:'denim',referencia:'0120-42905',familia:'F4152',grupoLogistico:'F4152-G1',nombreGrupo:'Indigo 14,22 derecha',ppp:38},
+    'INDIGO SOFT P':{metros:2100,grupo:'denim',referencia:'0120-43683',familia:'F4152',grupoLogistico:'F4152-G1',nombreGrupo:'Indigo 14,22 derecha',ppp:38},
+    'OXIGENO':{metros:2300,grupo:'basico',referencia:'0105-28502',familia:'F4152',grupoLogistico:'F4152-G4',nombreGrupo:'Oxigeno/Helio/Drill421',ppp:38},
+    'PARAGUANA PREMIUM':{metros:2300,grupo:'denim',referencia:'0110-43684',familia:'F4690',grupoLogistico:'F4690-G5',nombreGrupo:'Blue Ginger/Paraguana',ppp:42},
+    'PARAGUANA NATURAL PLUS':{metros:2300,grupo:'denim',referencia:'0115-43713',familia:'F4690',grupoLogistico:'F4690-G5',nombreGrupo:'Blue Ginger/Paraguana',ppp:42},
+    'PANALTEX':{metros:2500,grupo:'panal',referencia:'0110-93629',familia:'F6660',grupoLogistico:'F6660-G1',nombreGrupo:'Panaltex/panito',ppp:42},
+    'SATIN MELISSA BLACK':{metros:2300,grupo:'satin',referencia:'0199-21911',familia:'F5296',grupoLogistico:'F5296-G1',nombreGrupo:'Satin Base',ppp:52},
+    'SATIN IRIS BLACK':{metros:2500,grupo:'satin',referencia:'0115-43777',familia:'F5600',grupoLogistico:'F5600-G1',nombreGrupo:'Satin Base',ppp:52},
+    'SATIN SKINNY':{metros:2300,grupo:'satin',referencia:'0199-18848',familia:'F5600',grupoLogistico:'F5600-G1',nombreGrupo:'Satin Base',ppp:52},
+    'SATIN ANDRÉS':{metros:2500,grupo:'satin',referencia:'0199-18919',familia:'F5296',grupoLogistico:'F5296-G2',nombreGrupo:'Satin Base',ppp:52},
+    'SATIN LIRIOS':{metros:2500,grupo:'satin',referencia:'0199-18919',familia:'F5600',grupoLogistico:'F5600-G2',nombreGrupo:'Satin Base',ppp:52},
+    'VICTORIA 250':{metros:2500,grupo:'satin',referencia:'0115-43647',familia:'F5600',grupoLogistico:'F5600-G1',nombreGrupo:'Satin Base',ppp:52},
+    'Victoria 250.':{metros:2500,grupo:'satin',referencia:'0115-43647',familia:'F5600',grupoLogistico:'F5600-G1',nombreGrupo:'Satin Base',ppp:52},
+    'NOVA':{metros:2500,grupo:'satin',referencia:'0115-43827',familia:'F5600',grupoLogistico:'F5600-G1',nombreGrupo:'Satin Base',ppp:52},
+    'SELENE':{metros:2500,grupo:'satin',referencia:'0115-43827',familia:'F5600',grupoLogistico:'F5600-G1',nombreGrupo:'Satin Base',ppp:52},
+    'TWILL 2020':{metros:1500,grupo:'twill',referencia:'0105-43813',familia:'F4152',grupoLogistico:'F4152-G5',nombreGrupo:'Twill Base',ppp:50},
+    'TERRY SUPERIOR ALFOMBRIN N':{metros:2000,grupo:'terry',referencia:'0499-10304',familia:'Terry',grupoLogistico:'Terry-G1',nombreGrupo:'Terry Superior',ppp:50},
+    'TOALLA TERRY SUPERIOR':{metros:2000,grupo:'terry',referencia:'0499-10303',familia:'Terry',grupoLogistico:'Terry-G1',nombreGrupo:'Toalla Terry',ppp:52},
+    'TOALLA TERRY SUPERIOR ALFO':{metros:2000,grupo:'terry',referencia:'0499-10304',familia:'Terry',grupoLogistico:'Terry-G1',nombreGrupo:'Toalla Terry Alfombrín',ppp:52},
+    'TOALLA TERRY RAYA SUPERIO':{metros:2000,grupo:'terry',referencia:'0499-10305',familia:'Terry',grupoLogistico:'Terry-G1',nombreGrupo:'Toalla Terry Raya',ppp:52},
+    'TIANA':{metros:2000,grupo:'terry',referencia:'0110-43651',familia:'Terry',grupoLogistico:'Terry-G1',nombreGrupo:'Tiana',ppp:34}
+};
+
+let diccionario = JSON.parse(JSON.stringify(diccionarioBase));
+function cargarDiccionario(){const s=localStorage.getItem('diccionario_custom');if(s){try{const c=JSON.parse(s);Object.keys(c).forEach(k=>diccionario[k]=c[k])}catch(e){}}}
+function guardarDiccionario(){const custom={};Object.keys(diccionario).forEach(k=>{if(!diccionarioBase[k])custom[k]=diccionario[k]});localStorage.setItem('diccionario_custom',JSON.stringify(custom))}
+
+// ========== SALA 97 ==========
+const SALA97 = new Set();
+for(let i=1;i<=82;i++)SALA97.add(i);
+[91,92,94,95,96,97,98,99,100,101,102,103,111,112,113].forEach(i=>SALA97.add(i));
+function esSala97(id){return SALA97.has(id)}
+function getTipoTelar(id){if(id>=1&&id<=82)return{tipo:'Picanol OMNI 220',clase:'omni'};if([91,92,94,95,96,97,98,99,100,101,102,103,111,112,113].includes(id))return{tipo:'Picanol DOBBY 220',clase:'dobby'};return{tipo:'Desconocido',clase:'default'}}
+
+// ========== ESTADO ==========
+let dailyData={},fechasDisponibles=[],allTelares=new Set(),fechaSeleccionada=null,manualChains={},inventario={};
+function cargarInventario(){const s=localStorage.getItem('inventario_sala97');if(s){try{inventario=JSON.parse(s)}catch(e){inventario={}}}else{inventario={};Object.keys(diccionario).forEach(k=>inventario[k]=0)}}
+function guardarInventario(){localStorage.setItem('inventario_sala97',JSON.stringify(inventario))}
+
+// ========== UTILIDADES ==========
+function getPrimerEstilo(e){if(!e)return'';return e.split(',').map(s=>s.trim())[0]||e}
+function parseFecha(s){if(!s)return null;const p=s.trim().split('/');if(p.length!==3)return null;return new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]))}
+function formatFecha(d){if(!d||isNaN(d.getTime()))return'--/--';return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')}
+function formatFechaCompleta(d){if(!d||isNaN(d.getTime()))return'--/--/----';return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()}
+function diffDias(a,b){if(!a||!b)return 0;const d1=new Date(a);d1.setHours(0,0,0,0);const d2=new Date(b);d2.setHours(0,0,0,0);return Math.round((d2-d1)/864e5)}
+function addDias(f,d){const r=new Date(f);r.setDate(r.getDate()+d);return r}
+function getNivelAlerta(dias){if(dias<=2)return{nivel:'critico',color:'#ef5350',clase:'alerta-critico',badge:'badge-critico',label:'CRÍTICO (0-2d)'};if(dias<=5)return{nivel:'urgente',color:'#ff9800',clase:'alerta-urgente',badge:'badge-urgente',label:'URGENTE (2-5d)'};if(dias<=10)return{nivel:'atencion',color:'#ffb74d',clase:'alerta-atencion',badge:'badge-atencion',label:'ATENCIÓN (5-10d)'};if(dias<=14)return{nivel:'planificacion',color:'#66bb6a',clase:'alerta-planificacion',badge:'badge-planificacion',label:'PLANIFICACIÓN (10-14d)'};return null}
+
+// ========== PARSER CSV ==========
+function parseCSV(text){if(text.charCodeAt(0)===0xFEFF)text=text.slice(1);const rows=[];let row=[],val='',inQ=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'){if(inQ&&n==='"'){val+='"';i++}else inQ=!inQ}else if(c===';'&&!inQ){row.push(val.trim());val=''}else if((c==='\r'||c==='\n')&&!inQ){if(c==='\r'&&n==='\n')i++;row.push(val.trim());if(row.length>1||row[0]!=='')rows.push(row);row=[];val=''}else val+=c}if(val!==''||row.length>0){row.push(val.trim());rows.push(row)}return rows}
+
+function detectarFormato(rows){if(rows.length<2)return'desconocido';const h=rows[0].map(x=>x.replace(/\n/g,' ').trim().toLowerCase());const idx=h.findIndex(x=>x==='turno');if(idx===-1)return'desconocido';for(let i=1;i<Math.min(10,rows.length);i++){const t=(rows[i][idx]||'').trim();if(t==='A'||t==='B'||t==='C')return'turnos';if(t.includes(',')&&t.includes('A'))return'diario'}return'diario'}
+
+function procesarCSV(csvText){const rows=parseCSV(csvText);if(rows.length<2)return 0;const fmt=detectarFormato(rows);let count=0;
+if(fmt==='turnos'){const grouped={};let fechaDia=null;for(let i=1;i<rows.length;i++){const c=rows[i];if(c.length<12)continue;fechaDia=c[2]?c[2].trim():fechaDia;const act=c[5]||"";const telarStr=c[6]||"";const estComp=c[9]||"";const metros=parseFloat(c[11])||0;const telarId=parseInt(telarStr);if(isNaN(telarId))continue;const estilo=getPrimerEstilo(estComp);const activo=act.toUpperCase().includes("ACTIVO")&&metros>0;const key=fechaDia+'_'+telarId;if(!grouped[key])grouped[key]={fecha:fechaDia,telarId,estilo,metros:0,activo:false};grouped[key].metros+=metros;if(activo)grouped[key].activo=true}Object.values(grouped).forEach(item=>{if(!dailyData[item.fecha])dailyData[item.fecha]={};dailyData[item.fecha][item.telarId]={estilo:item.estilo,metros:item.metros,activo:item.activo};allTelares.add(item.telarId);if(!fechasDisponibles.includes(item.fecha))fechasDisponibles.push(item.fecha);count++})}else{let fechaDia=null;for(let i=1;i<rows.length;i++){const c=rows[i];if(c.length<13)continue;fechaDia=c[3]?c[3].trim():fechaDia;const telarId=parseInt(c[7]);const act=c[6]||"";const estComp=c[10]||"";const metros=parseFloat(c[12])||0;if(isNaN(telarId))continue;const estilo=getPrimerEstilo(estComp);const activo=act.toUpperCase().includes("ACTIVO")&&metros>0;if(!dailyData[fechaDia])dailyData[fechaDia]={};dailyData[fechaDia][telarId]={estilo,metros,activo};allTelares.add(telarId);if(!fechasDisponibles.includes(fechaDia))fechasDisponibles.push(fechaDia);count++}}return count}
+
+// ========== CARGA GITHUB ==========
+const ARCHIVOS_CSV=['data/Produccion - Tejeduria 01-07-2026.csv','data/Produccion - Tejeduria 02-07-2026.csv','data/Produccion - Tejeduria 03-07-2026.csv','data/Produccion - Tejeduria 06-07-2026.csv','data/Produccion - Tejeduria 07-07-2026.csv','data/Produccion - Tejeduria 08-07-2026.csv','data/Produccion - Tejeduria 09-07-2026.csv','data/Produccion - Tejeduria 10-07-2026.csv','data/Produccion - Tejeduria 13-07-2026.csv','data/Produccion - Tejeduria 14-07-2026.csv','data/Produccion - Tejeduria 15-07-2026.csv','data/Produccion - Tejeduria 16-07-2026.csv','data/Produccion - Tejeduria 17-07-2026.csv','data/Produccion - Tejeduria 20-07-2026.csv','data/Produccion - Tejeduria 21-07-2026.csv','data/Produccion - Tejeduria 22-07-2026.csv'];
+async function cargarGitHub(){const ld=document.getElementById('loadingIndicator'),pr=document.getElementById('loadingProgress');ld.classList.add('active');dailyData={};fechasDisponibles=[];allTelares=new Set();let ok=0;for(let i=0;i<ARCHIVOS_CSV.length;i++){const a=ARCHIVOS_CSV[i];pr.textContent=(i+1)+'/'+ARCHIVOS_CSV.length;try{const r=await fetch(a+'?t='+Date.now());if(r.ok){const t=await r.text();const p=procesarCSV(t);if(p>0)ok++}}catch(e){}await new Promise(r=>setTimeout(r,100))}ld.classList.remove('active');if(ok>0){fechasDisponibles.sort((a,b)=>parseFecha(a)-parseFecha(b));actualizarSelector();fechaSeleccionada=fechasDisponibles[fechasDisponibles.length-1];cargarFecha(fechaSeleccionada)}}
+
+// ========== CÁLCULO ==========
+function calcularEstado(){const hist={};allTelares.forEach(id=>{if(esSala97(id))hist[id]=[]});const fechas=[...fechasDisponibles].sort((a,b)=>parseFecha(a)-parseFecha(b));let cur={};allTelares.forEach(id=>cur[id]=null);fechas.forEach(fecha=>{const dd=dailyData[fecha]||{};allTelares.forEach(id=>{if(!esSala97(id))return;const hoy=dd[id];const prev=cur[id];if(hoy&&hoy.activo&&hoy.estilo){if(!prev||prev.estilo!==hoy.estilo){if(prev)prev.endDate=fecha;const nc={estilo:hoy.estilo,totalWarp:diccionario[hoy.estilo]?diccionario[hoy.estilo].metros:0,startDate:fecha,endDate:null,dailyProduction:[],accumulatedMeters:hoy.metros,avgDaily:150,tipo:'csv',sinPrediccion:!diccionario[hoy.estilo]};hist[id].push(nc);cur[id]=nc}else{prev.accumulatedMeters+=hoy.metros;prev.dailyProduction.push(hoy.metros);if(prev.dailyProduction.length>5)prev.dailyProduction.shift()}if(cur[id].dailyProduction.length>0)cur[id].avgDaily=cur[id].dailyProduction.reduce((a,b)=>a+b,0)/cur[id].dailyProduction.length}})});return hist}
+
+// ========== SELECTOR ==========
+function actualizarSelector(){const sel=document.getElementById('selectorFecha');sel.innerHTML='';fechasDisponibles.forEach(f=>{const o=document.createElement('option');o.value=f;const d=parseFecha(f);o.textContent=d?formatFechaCompleta(d):f;sel.appendChild(o)});if(fechaSeleccionada&&fechasDisponibles.includes(fechaSeleccionada))sel.value=fechaSeleccionada;else if(fechasDisponibles.length>0){sel.value=fechasDisponibles[fechasDisponibles.length-1];fechaSeleccionada=sel.value}document.getElementById('infoFechas').textContent=fechasDisponibles.length+' días'}
+function cargarFecha(f){if(!f||!fechasDisponibles.includes(f))return;fechaSeleccionada=f;const d=parseFecha(f);document.getElementById('fechaActual').textContent=d?formatFechaCompleta(d):f;renderizarDashboard(f)}
+
+// ========== DASHBOARD ==========
+function renderizarDashboard(fecha){const hist=calcularEstado();const ids=Object.keys(hist).map(Number).sort((a,b)=>a-b);let activos=0,parados=0,metrosT=0,metrosF=0,cambios3=0,alertasTexto='';const estAct=new Set(),consEst={};const alertas={critico:[],urgente:[],atencion:[],planificacion:[]};
+ids.forEach(id=>{const ch=hist[id];const ult=ch[ch.length-1];if(ult&&!ult.endDate){activos++;const rem=Math.max(0,ult.totalWarp-ult.accumulatedMeters);const dr=ult.avgDaily>0?Math.ceil(rem/ult.avgDaily):99;metrosT+=ult.accumulatedMeters;metrosF+=rem;estAct.add(ult.estilo);if(!consEst[ult.estilo])consEst[ult.estilo]=0;consEst[ult.estilo]+=ult.avgDaily;if(dr<=3&&rem>0)cambios3++;const na=getNivelAlerta(dr);if(na&&rem>0)alertas[na.nivel].push({id,estilo:ult.estilo,dias:dr,rem,avg:ult.avgDaily,total:ult.totalWarp,sinPred:ult.sinPrediccion})}else parados++});
+const disp=ids.length>0?Math.round(activos/ids.length*100):0;document.getElementById('kpiActivos').textContent=activos;document.getElementById('kpiParados').textContent=parados;document.getElementById('kpiDisponibilidad').textContent=disp+'%';document.getElementById('kpiMetrosTejidos').textContent=metrosT.toLocaleString('es')+'m';document.getElementById('kpiMetrosFaltan').textContent=metrosF.toLocaleString('es')+'m';document.getElementById('kpiCambios').textContent=cambios3;
+let eCR=0,dRT=0,eCC=0;estAct.forEach(e=>{const st=inventario[e]||0;const co=consEst[e]||0;const mc=diccionario[e]?diccionario[e].metros:0;if(co>0){eCC++;if(st>0&&mc>0){eCR++;dRT+=(st*mc)/co}}});const cob=eCC>0?Math.round(eCR/eCC*100):0;document.getElementById('kpiCobertura').textContent=cob+'%';document.getElementById('kpiCoberturaSub').textContent=(eCC>0?(dRT/eCC).toFixed(1):0)+' días';
+const ban=document.getElementById('alertBanner');const totalAlertas=alertas.critico.length+alertas.urgente.length;if(totalAlertas>0){ban.classList.add('active');document.getElementById('alertBannerText').textContent='⚠️ '+alertas.critico.length+' crítico(s), '+alertas.urgente.length+' urgente(s)'}else ban.classList.remove('active');
+document.getElementById('estadoDatos').textContent='📊 '+fechasDisponibles.length+' días - '+ids.length+' telares Sala97';
+renderizarGantt(hist,fecha);window._alertas=alertas}
+
+// ========== GANTT ==========
+function renderizarGantt(hist,fechaRef){const grid=document.getElementById('ganttGrid'),cont=document.getElementById('ganttContainer');grid.innerHTML='';const lh=cont.querySelector('.linea-hoy-container');if(lh)lh.remove();if(fechasDisponibles.length===0)return;const fo=[...fechasDisponibles].sort((a,b)=>parseFecha(a)-parseFecha(b));const pf=parseFecha(fo[0]),uf=parseFecha(fo[fo.length-1]),hoy=parseFecha(fechaRef);const dTotal=Math.max(20,diffDias(pf,uf)+15);const ctd=dTotal;
+const hdr=document.createElement('div');hdr.className='gantt-header';const emp=document.createElement('div');hdr.appendChild(emp);const ht=document.createElement('div');ht.className='gantt-track-header';const intv=ctd>40?7:ctd>20?5:3;for(let i=0;i<=ctd;i+=intv){const f=addDias(pf,i),x=i/ctd*100;const ln=document.createElement('div');ln.className='linea-marca';ln.style.left=x+'%';ht.appendChild(ln);const mk=document.createElement('div');mk.className='fecha-marca';if(diffDias(f,hoy)===0)mk.classList.add('hoy');mk.style.left=x+'%';mk.textContent=formatFecha(f);ht.appendChild(mk)}hdr.appendChild(ht);grid.appendChild(hdr);
+const ids=Object.keys(hist).map(Number).sort((a,b)=>a-b);ids.forEach(id=>{const row=document.createElement('div');row.className='gantt-row';const lbl=document.createElement('div');lbl.className='gantt-label';const ti=getTipoTelar(id);lbl.innerHTML='<span class="telar-num">T'+id+'</span><span class="telar-badge-full '+ti.clase+'" title="'+ti.tipo+'">'+ti.tipo+'</span>';row.appendChild(lbl);const track=document.createElement('div');track.className='gantt-track';const chains=hist[id];
+for(let i=0;i<chains.length;i++){const ch=chains[i];if(!ch.startDate)continue;if(i>0){const pc=chains[i-1];if(pc.endDate){const gd=diffDias(parseFecha(pc.endDate),parseFecha(ch.startDate));if(gd>0){const gl=diffDias(pf,parseFecha(pc.endDate))/ctd*100;const gb=document.createElement('div');gb.className='cambio-separator';gb.style.left=gl+'%';track.appendChild(gb)}}}
+const so=Math.max(0,diffDias(pf,parseFecha(ch.startDate)));let eo=ctd;if(ch.endDate)eo=Math.min(ctd,diffDias(pf,parseFecha(ch.endDate)));else{const rem=Math.max(0,ch.totalWarp-ch.accumulatedMeters);if(ch.avgDaily>0&&rem>0)eo=Math.min(ctd,diffDias(pf,addDias(parseFecha(fechaRef),Math.ceil(rem/ch.avgDaily))))}
+const dur=Math.max(1,eo-so),lp=so/ctd*100,wp=dur/ctd*100;const cp=ch.totalWarp>0?Math.min(100,ch.accumulatedMeters/ch.totalWarp*100):0;
+const barra=document.createElement('div');barra.className='barra';barra.style.left=lp+'%';barra.style.width=Math.max(2,wp)+'%';
+const gr=diccionario[ch.estilo]?diccionario[ch.estilo].grupo:'default';let cb='#78909c';if(gr==='denim')cb='#4fc3f7';else if(gr==='colores')cb='#ab47bc';else if(gr==='amazonas')cb='#66bb6a';else if(gr==='twill')cb='#ffa726';else if(gr==='basico')cb='#26c6da';else if(gr==='terry')cb='#ec407a';else if(gr==='satin')cb='#e91e63';else if(gr==='panal')cb='#8bc34a';barra.style.background='linear-gradient(90deg,'+cb+','+cb+'dd)';
+const rem=Math.max(0,ch.totalWarp-ch.accumulatedMeters);const dr=ch.avgDaily>0?Math.ceil(rem/ch.avgDaily):0;const na=getNivelAlerta(dr);
+const info=diccionario[ch.estilo]||{};barra.dataset.telar=id;barra.dataset.tipoTelar=ti.tipo;barra.dataset.estilo=ch.estilo;barra.dataset.referencia=info.referencia||'N/A';barra.dataset.familia=info.familia||'N/A';barra.dataset.grupoLogistico=info.grupoLogistico||'N/A';barra.dataset.nombreGrupo=info.nombreGrupo||'N/A';barra.dataset.acumulado=ch.accumulatedMeters.toFixed(0);barra.dataset.total=ch.totalWarp;barra.dataset.pct=cp.toFixed(1);barra.dataset.promedio=ch.avgDaily.toFixed(0);barra.dataset.restantes=rem.toFixed(0);barra.dataset.dias=dr;barra.dataset.fechaFin=formatFechaCompleta(addDias(parseFecha(fechaRef),dr));barra.dataset.sinPred=ch.sinPrediccion?'1':'0';
+barra.onmouseenter=showTooltip;barra.onmouseleave=hideTooltip;barra.onmousemove=moveTooltip;
+const cons=document.createElement('div');cons.className='consumido';cons.style.width=cp+'%';barra.appendChild(cons);const fut=document.createElement('div');fut.className='futuro';fut.style.width=(100-cp)+'%';barra.appendChild(fut);
+const txt=document.createElement('div');txt.className='texto';const nm=ch.estilo.length>8?ch.estilo.substring(0,6)+'..':ch.estilo;txt.innerHTML='<span>'+nm+'</span><span class="pct">'+cp.toFixed(0)+'%</span>';barra.appendChild(txt);
+if(rem>0&&dr<=14&&!ch.endDate&&na){const ai=document.createElement('i');ai.className='fas fa-exclamation-circle '+na.clase;barra.appendChild(ai)}
+track.appendChild(barra)}row.appendChild(track);grid.appendChild(row)});
+const ho=diffDias(pf,hoy);if(ho>=0&&ho<=ctd){const hx=ho/ctd*100;const lh2=document.createElement('div');lh2.className='linea-hoy-container';const lw=170,cw=cont.offsetWidth,tw=cw-lw-4;lh2.style.left=(lw+4+hx/100*tw)+'px';cont.appendChild(lh2)}}
+
+// ========== TOOLTIP ==========
+const tooltip=document.getElementById('customTooltip');
+function showTooltip(e){const d=e.target.dataset;const sinPred=d.sinPred==='1'?'<span style="background:#ef5350;color:#fff;padding:2px 6px;border-radius:3px;font-size:0.55rem">⚠️ SIN PREDICCIÓN</span>':'';tooltip.innerHTML='<h4><i class="fas fa-industry"></i> Telar T'+d.telar+' <span style="font-size:0.65rem;color:#8899bb">('+d.tipoTelar+')</span> '+sinPred+'</h4><div class="info-section"><div class="info-row"><span class="label">📋 Referencia:</span><span class="value">'+d.referencia+'</span></div><div class="info-row"><span class="label">🏷️ Familia:</span><span class="value">'+d.familia+'</span></div><div class="info-row"><span class="label">📦 Grupo Log.:</span><span class="value" style="color:#ffb74d">'+d.grupoLogistico+'</span></div><div class="info-row"><span class="label">🧵 Estilo:</span><span class="value">'+d.estilo+'</span></div><div class="info-row"><span class="label">📐 Grupo:</span><span class="value">'+d.nombreGrupo+'</span></div></div><div class="row"><span class="label">Avance:</span><span class="value">'+d.acumulado+'m / '+d.total+'m</span></div><div class="row"><span class="label">Progreso:</span><span class="value highlight">'+d.pct+'%</span></div><div class="row"><span class="label">Promedio:</span><span class="value">'+d.promedio+' m/día</span></div><hr class="divider"><div class="row"><span class="label">Faltan:</span><span class="value highlight">'+d.restantes+'m</span></div><div class="row"><span class="label">Tiempo Est.:</span><span class="value highlight">'+d.dias+' días</span></div><div class="row"><span class="label">🏁 Cambio:</span><span class="value" style="color:#4fc3f7">'+d.fechaFin+'</span></div>';tooltip.style.display='block';moveTooltip(e)}
+function hideTooltip(){tooltip.style.display='none'}
+function moveTooltip(e){let x=e.clientX+15,y=e.clientY+15;if(x+320>window.innerWidth)x=e.clientX-320;if(y+350>window.innerHeight)y=e.clientY-350;tooltip.style.left=x+'px';tooltip.style.top=y+'px'}
+
+// ========== INVENTARIO ==========
+function renderizarInventario(){const tb=document.getElementById('invTableBody');tb.innerHTML='';const ti=Object.keys(inventario).length,ts=Object.values(inventario).reduce((a,b)=>a+(parseInt(b)||0),0),cs=Object.values(inventario).filter(v=>v>0).length;document.getElementById('invStats').innerHTML='<div class="stat-item"><i class="fas fa-boxes" style="color:#4fc3f7"></i> Estilos: <span class="stat-value">'+ti+'</span></div><div class="stat-item"><i class="fas fa-cubes" style="color:#66bb6a"></i> Stock: <span class="stat-value">'+cs+'</span></div><div class="stat-item"><i class="fas fa-layer-group" style="color:#ffb74d"></i> Und: <span class="stat-value">'+ts+'</span></div>';const en=Object.entries(inventario).sort((a,b)=>{if(b[1]>0&&a[1]===0)return 1;if(a[1]>0&&b[1]===0)return-1;return a[0].localeCompare(b[0])});en.forEach(([e,q])=>{const gl=diccionario[e]?diccionario[e].grupoLogistico:'—';const tr=document.createElement('tr');tr.innerHTML='<td style="font-weight:600;color:#e8edf5">'+e+'</td><td style="color:#ffb74d;font-size:0.6rem">'+gl+'</td><td style="text-align:center"><input type="number" class="qty-input" value="'+q+'" min="0" data-estilo="'+e+'"></td><td style="text-align:center"><button class="btn-icon save" onclick="guardarQty(\''+e.replace(/'/g,"\\'")+'\')"><i class="fas fa-check"></i></button><button class="btn-icon delete" onclick="eliminarItem(\''+e.replace(/'/g,"\\'")+'\')"><i class="fas fa-trash"></i></button></td>';tb.appendChild(tr)});tb.querySelectorAll('.qty-input').forEach(inp=>{inp.addEventListener('change',e=>{inventario[e.target.dataset.estilo]=parseInt(e.target.value)||0;guardarInventario();renderizarInventario()})})}
+window.guardarQty=function(e){const i=document.querySelector('input[data-estilo="'+e+'"]');if(i){inventario[e]=parseInt(i.value)||0;guardarInventario();renderizarInventario()}};
+window.eliminarItem=function(e){if(confirm('¿Eliminar "'+e+'"?')){delete inventario[e];guardarInventario();renderizarInventario()}};
+
+// ========== DICCIONARIO MODAL ==========
+function renderizarDiccionario(){const tb=document.getElementById('diccTableBody');tb.innerHTML='';Object.entries(diccionario).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([e,d])=>{const tr=document.createElement('tr');tr.innerHTML='<td style="font-weight:600;color:#e8edf5">'+e+'</td><td style="color:#8899bb">'+d.familia+'</td><td style="color:#ffb74d">'+d.grupoLogistico+'</td><td>'+d.metros+'</td>';tb.appendChild(tr)});
+const dc=document.getElementById('estilosDesconocidos');dc.innerHTML='';const hist=calcularEstado();const desconocidos=new Set();Object.values(hist).forEach(chains=>{chains.forEach(ch=>{if(!diccionario[ch.estilo])desconocidos.add(ch.estilo)})});if(desconocidos.size>0){dc.innerHTML='<h3 style="font-size:0.7rem;color:#ef5350;margin-bottom:4px">⚠️ Estilos Sin Registrar ('+desconocidos.size+')</h3>';desconocidos.forEach(e=>{const div=document.createElement('div');div.className='estilo-desconocido';div.innerHTML='<span class="nombre">'+e+'</span><span class="info">Sin predicción de cambio</span><button class="btn-guardar" style="padding:2px 8px;font-size:0.5rem" onclick="registrarEstilo(\''+e.replace(/'/g,"\\'")+'\')">Registrar</button>';dc.appendChild(div)})}}
+window.registrarEstilo=function(nombre){document.getElementById('regEstiloNombre').value=nombre;document.getElementById('modalDiccionario').classList.remove('active');document.getElementById('modalAgregarEstilo').classList.add('active')};
+
+// ========== ALERTAS ==========
+function renderizarAlertas(){const cont=document.getElementById('alertasContenido');cont.innerHTML='';const a=window._alertas||{critico:[],urgente:[],atencion:[],planificacion:[]};const secciones=[{key:'critico',icon:'🔴',color:'#ef5350'},{key:'urgente',icon:'🟠',color:'#ff9800'},{key:'atencion',icon:'🟡',color:'#ffb74d'},{key:'planificacion',icon:'🟢',color:'#66bb6a'}];
+secciones.forEach(s=>{const items=a[s.key];const sec=document.createElement('div');sec.className='alert-section';sec.innerHTML='<h4 style="color:'+s.color+'">'+s.icon+' '+s.key.toUpperCase()+' ('+items.length+')</h4>';if(items.length===0){sec.innerHTML+='<p style="font-size:0.55rem;color:#6688aa">Sin alertas</p>'}else{const tbl=document.createElement('table');tbl.className='tabla-alertas';tbl.innerHTML='<thead><tr><th>Telar</th><th>Estilo</th><th>Días</th><th>Faltan</th><th>Acción</th></tr></thead>';const tbody=document.createElement('tbody');items.forEach(it=>{const tr=document.createElement('tr');const st=inventario[it.estilo]||0;const pred=it.sinPred?'<span style="color:#ef5350;font-size:0.45rem">Sin pred.</span>':'';tr.innerHTML='<td><strong style="color:#4fc3f7">T'+it.id+'</strong></td><td>'+it.estilo+' '+pred+'</td><td><span class="'+getNivelAlerta(it.dias).badge+'">'+it.dias+'d</span></td><td>'+it.rem+'m</td><td>'+(st>0?'<button class="btn-action" style="padding:2px 6px;font-size:0.45rem" onclick="abrirReemplazo('+it.id+',\''+it.estilo.replace(/'/g,"\\'")+'\','+it.avg+','+it.total+')">Programar</button>':'<span style="color:#ef5350;font-size:0.45rem">Sin Stock</span>')+'</td>';tbody.appendChild(tr)});tbl.appendChild(tbody);sec.appendChild(tbl)}cont.appendChild(sec)})}
+
+// ========== EVENT LISTENERS ==========
+document.getElementById('btnCargarCSV').addEventListener('click',()=>{const inp=document.createElement('input');inp.type='file';inp.accept='.csv';inp.onchange=function(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=function(ev){const p=procesarCSV(ev.target.result);if(p>0){fechasDisponibles.sort((a,b)=>parseFecha(a)-parseFecha(b));actualizarSelector();fechaSeleccionada=fechasDisponibles[fechasDisponibles.length-1];cargarFecha(fechaSeleccionada);alert('✅ '+p+' registros cargados')}else alert('⚠️ Sin datos')};r.readAsText(f,'UTF-8')};inp.click()});
+document.getElementById('btnRecargar').addEventListener('click',()=>{if(confirm('¿Recargar desde GitHub?'))cargarGitHub()});
+document.getElementById('btnInventario').addEventListener('click',()=>{renderizarInventario();document.getElementById('modalInventario').classList.add('active')});
+document.getElementById('btnCerrarInv').addEventListener('click',()=>{document.getElementById('modalInventario').classList.remove('active');if(fechaSeleccionada)renderizarDashboard(fechaSeleccionada)});
+document.getElementById('btnAgregarItem').addEventListener('click',()=>{const sel=document.getElementById('nuevoItemEstilo');sel.innerHTML='';Object.keys(diccionario).forEach(e=>{const o=document.createElement('option');o.value=e;o.textContent=e;sel.appendChild(o)});document.getElementById('nuevoItemCantidad').value=1;document.getElementById('modalAgregarItem').classList.add('active')});
+document.getElementById('btnCancelarAgregar').addEventListener('click',()=>document.getElementById('modalAgregarItem').classList.remove('active'));
+document.getElementById('btnConfirmarAgregar').addEventListener('click',()=>{const e=document.getElementById('nuevoItemEstilo').value;const c=parseInt(document.getElementById('nuevoItemCantidad').value)||0;inventario[e]=(inventario[e]||0)+c;guardarInventario();document.getElementById('modalAgregarItem').classList.remove('active');renderizarInventario()});
+document.getElementById('btnResetInv').addEventListener('click',()=>{if(confirm('¿Resetear todo a 0?')){Object.keys(inventario).forEach(k=>inventario[k]=0);guardarInventario();renderizarInventario()}});
+document.getElementById('btnBulkImport').addEventListener('click',()=>{document.getElementById('bulkText').value='';document.getElementById('modalBulkImport').classList.add('active')});
+document.getElementById('btnCancelarBulk').addEventListener('click',()=>document.getElementById('modalBulkImport').classList.remove('active'));
+document.getElementById('btnConfirmarBulk').addEventListener('click',()=>{const t=document.getElementById('bulkText').value;let p=0;t.split('\n').filter(l=>l.trim()).forEach(l=>{const m=l.match(/^(.+?)\s*[=:]\s*(\d+)/);if(m){inventario[m[1].trim()]=parseInt(m[2]);p++}});guardarInventario();document.getElementById('modalBulkImport').classList.remove('active');renderizarInventario();alert('✅ '+p+' importados')});
+document.getElementById('btnDiccionario').addEventListener('click',()=>{renderizarDiccionario();document.getElementById('modalDiccionario').classList.add('active')});
+document.getElementById('btnCerrarDicc').addEventListener('click',()=>{document.getElementById('modalDiccionario').classList.remove('active');if(fechaSeleccionada)renderizarDashboard(fechaSeleccionada)});
+document.getElementById('btnCancelarReg').addEventListener('click',()=>{document.getElementById('modalAgregarEstilo').classList.remove('active');document.getElementById('modalDiccionario').classList.add('active')});
+document.getElementById('btnConfirmarReg').addEventListener('click',()=>{const n=document.getElementById('regEstiloNombre').value.trim();const r=document.getElementById('regEstiloRef').value.trim();const f=document.getElementById('regEstiloFamilia').value.trim();const g=document.getElementById('regEstiloGrupo').value.trim();const ng=document.getElementById('regEstiloNombreGrupo').value.trim();const m=parseInt(document.getElementById('regEstiloMetros').value)||2300;const p=parseInt(document.getElementById('regEstiloPPP').value)||44;const c=document.getElementById('regEstiloColor').value;if(!n){alert('Nombre requerido');return}diccionario[n]={metros:m,grupo:c,referencia:r,familia:f,grupoLogistico:g,nombreGrupo:ng,ppp:p};guardarDiccionario();if(!inventario[n])inventario[n]=0;guardarInventario();document.getElementById('modalAgregarEstilo').classList.remove('active');document.getElementById('modalDiccionario').classList.add('active');renderizarDiccionario();if(fechaSeleccionada)renderizarDashboard(fechaSeleccionada);alert('✅ Estilo "'+n+'" registrado')});
+document.getElementById('btnAlertas').addEventListener('click',()=>{renderizarAlertas();document.getElementById('modalAlertas').classList.add('active')});
+document.getElementById('btnCerrarAlertas').addEventListener('click',()=>document.getElementById('modalAlertas').classList.remove('active'));
+window.abrirReemplazo=function(id,estilo,avg,total){document.getElementById('reemplazoSubtitulo').textContent='Telar T'+id+' ('+estilo+')';const gr=diccionario[estilo]?diccionario[estilo].grupo:'other';const opts=Object.keys(diccionario).filter(k=>(inventario[k]||0)>0&&(diccionario[k].grupo===gr||k===estilo));const sel=document.getElementById('repEstilo');sel.innerHTML='';(opts.length>0?opts:Object.keys(diccionario).filter(k=>(inventario[k]||0)>0)).forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o+' (Stock: '+inventario[o]+')';sel.appendChild(op)});sel.onchange=()=>{document.getElementById('repStock').value=inventario[sel.value]||0;document.getElementById('repMetros').value=diccionario[sel.value]?diccionario[sel.value].metros:total};if(sel.options.length>0){document.getElementById('repStock').value=inventario[sel.value]||0;document.getElementById('repMetros').value=diccionario[sel.value]?diccionario[sel.value].metros:total}document.getElementById('repPromedio').value=avg.toFixed(1);document.getElementById('modalAlertas').classList.remove('active');document.getElementById('modalReemplazo').classList.add('active')};
+document.getElementById('btnConfirmarRep').addEventListener('click',()=>{const e=document.getElementById('repEstilo').value;const m=parseFloat(document.getElementById('repMetros').value);const a=parseFloat(document.getElementById('repPromedio').value);if((inventario[e]||0)>0){inventario[e]--;guardarInventario();manualChains[window._telarRep]={estilo:e,totalWarp:m,accumulatedMeters:0,avgDaily:a,startDate:formatFechaCompleta(addDias(new Date(),1))};alert('✅ Programado');document.getElementById('modalReemplazo').classList.remove('active');if(fechaSeleccionada)renderizarDashboard(fechaSeleccionada)}else alert('Sin stock')});
+document.getElementById('btnCancelarRep').addEventListener('click',()=>document.getElementById('modalReemplazo').classList.remove('active'));
+document.getElementById('selectorFecha').addEventListener('change',function(){if(this.value)cargarFecha(this.value)});
+document.getElementById('btnFechaAnterior').addEventListener('click',()=>{const i=fechasDisponibles.indexOf(fechaSeleccionada);if(i>0){document.getElementById('selectorFecha').value=fechasDisponibles[i-1];cargarFecha(fechasDisponibles[i-1])}});
+document.getElementById('btnFechaSiguiente').addEventListener('click',()=>{const i=fechasDisponibles.indexOf(fechaSeleccionada);if(i<fechasDisponibles.length-1){document.getElementById('selectorFecha').value=fechasDisponibles[i+1];cargarFecha(fechasDisponibles[i+1])}});
+window.addEventListener('resize',()=>{if(fechaSeleccionada)renderizarDashboard(fechaSeleccionada)});
+
+// ========== INICIO ==========
+document.addEventListener('DOMContentLoaded',async()=>{cargarDiccionario();cargarInventario();document.getElementById('fechaActual').textContent='--/--/----';const saved=localStorage.getItem('planificador_sala97');if(saved){try{const s=JSON.parse(saved);dailyData=s.dailyData||{};fechasDisponibles=s.fechasDisponibles||[];allTelares=new Set(s.allTelares||[]);if(fechasDisponibles.length>0){actualizarSelector();fechaSeleccionada=fechasDisponibles[fechasDisponibles.length-1];cargarFecha(fechaSeleccionada)}}catch(e){}}setTimeout(()=>cargarGitHub(),500)});
+</script>
+</body>
+</html>
