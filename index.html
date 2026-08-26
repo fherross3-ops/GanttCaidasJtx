@@ -402,7 +402,8 @@ const ARCHIVOS_CSV=['data/Produccion - Tejeduria 01-07-2026.csv',
                     'data/Produccion - Tejeduria 21-08-2026.csv',
                     'data/Produccion - Tejeduria 22-08-2026.csv',
                     'data/Produccion - Tejeduria 23-08-2026.csv',
-                    'data/Produccion - Tejeduria 24-08-2026.csv'];
+                    'data/Produccion - Tejeduria 24-08-2026.csv',
+                    'data/Produccion - Tejeduria 25-08-2026.csv'];
 async function cargarGitHub(){const ld=document.getElementById('loadingIndicator'),pr=document.getElementById('loadingProgress');ld.classList.add('active');dailyData={};fechasDisponibles=[];allTelares=new Set();let ok=0;for(let i=0;i<ARCHIVOS_CSV.length;i++){const a=ARCHIVOS_CSV[i];pr.textContent=(i+1)+'/'+ARCHIVOS_CSV.length;try{const r=await fetch(a+'?t='+Date.now());if(r.ok){const t=await r.text();const p=procesarCSV(t);if(p>0)ok++}}catch(e){}await new Promise(r=>setTimeout(r,100))}ld.classList.remove('active');if(ok>0){fechasDisponibles.sort((a,b)=>parseFecha(a)-parseFecha(b));actualizarSelector();fechaSeleccionada=fechasDisponibles[fechasDisponibles.length-1];cargarFecha(fechaSeleccionada)}}
 
 // ========== CÁLCULO ==========
